@@ -19,4 +19,14 @@ def login_for_access_token(
             detail="Incorrect email or password",
         )
     access_token = create_access_token(data={"sub": str(user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Возвращаем токен + данные пользователя
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role
+        }
+    }
