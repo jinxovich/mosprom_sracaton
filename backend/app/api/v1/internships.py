@@ -1,0 +1,26 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app import crud, models
+from app.schemas.internship import InternshipCreate, Internship, InternshipPublic
+from app.api.deps import get_db
+from app.core.security import get_current_user
+
+router = APIRouter()
+
+@router.get("/", response_model=list[InternshipPublic])
+def read_internships(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+):
+    return crud.internship.get_multi(db, skip=skip, limit=limit, is_published=True)
+
+@router.post("/", response_model=Internship)
+def create_internship(
+    internship_in: InternshipCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "university":
+        raise HTTPException(status_code=403, detail="Only universities can create internships")
+    return crud.internship.create_with_owner(db=db, obj_in=internship_in, owner_id=current_user.id)
