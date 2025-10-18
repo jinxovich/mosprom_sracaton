@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from app import crud, models
 from app.schemas.vacancy import Vacancy
 from app.schemas.internship import Internship
-from app.schemas.user import UserResponse  # Импортируем
+from app.schemas.user import UserResponse
 from app.api.deps import get_db
 from app.core.security import get_current_user
 
@@ -24,7 +24,7 @@ def get_pending_users(
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admin can moderate")
-    return crud.user.get_pending(db)  # Нужно добавить в crud.user: db.query(User).filter(User.role.in_(["hr", "university"]), User.is_active==False, User.rejection_reason==None).all()
+    return crud.user.get_pending(db)
 
 @router.patch("/users/{user_id}/publish", response_model=UserResponse)
 def publish_user(
@@ -34,7 +34,7 @@ def publish_user(
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admin can publish")
-    user = crud.user.approve(db, user_id=user_id)  # Добавьте в crud: user = get(db, user_id), user.is_active=True, commit, return user
+    user = crud.user.approve(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -48,10 +48,50 @@ def reject_user(
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admin can reject")
-    user = crud.user.reject(db, user_id=user_id, rejection_reason=body.rejection_reason)  # Добавьте в crud: user = get, user.rejection_reason=reason, commit, return user
+    user = crud.user.reject(db, user_id=user_id, rejection_reason=body.rejection_reason)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+# --- Вакансии ---
+
+@router.get("/vacancies/pending", response_model=list[Vacancy])
+def get_pending_vacancies(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can moderate")
+    return crud.vacancy.get_unpublished(db)
+
+@router.patch("/vacancies/{vacancy_id}/publish", response_model=Vacancy)
+def publish_vacancy(
+    vacancy_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can publish")
+    vacancy = crud.vacancy.publish(db, vacancy_id=vacancy_id)
+    if not vacancy:
+        raise HTTPException(status_code=404, detail="Vacancy not found")
+    return vacancy
+
+@router.patch("/vacancies/{vacancy_id}/reject", response_model=Vacancy)
+def reject_vacancy(
+    vacancy_id: int,
+    body: RejectionRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can reject")
+    vacancy = crud.vacancy.reject_vacancy(
+        db, vacancy_id=vacancy_id, rejection_reason=body.rejection_reason
+    )
+    if not vacancy:
+        raise HTTPException(status_code=404, detail="Vacancy not found")
+    return vacancy
 
 # --- Стажировки ---
 

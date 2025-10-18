@@ -18,9 +18,10 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import PendingIcon from '@mui/icons-material/Pending';
 
 const AdminDashboardPage = () => {
-  const [pending, setPending] = useState({ vacancies: [], internships: [], users: [] });  // Добавили users
+  const [pending, setPending] = useState({ vacancies: [], internships: [], users: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [rejectionReasons, setRejectionReasons] = useState({});
@@ -32,7 +33,7 @@ const AdminDashboardPage = () => {
       const [vacanciesRes, internshipsRes, usersRes] = await Promise.all([
         api.get('/moderation/vacancies/pending'),
         api.get('/moderation/internships/pending'),
-        api.get('/moderation/users/pending'),  // Новый запрос
+        api.get('/moderation/users/pending'),
       ]);
       setPending({
         vacancies: vacanciesRes.data,
@@ -144,7 +145,7 @@ const AdminDashboardPage = () => {
 
       <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
         <Chip
-          icon={<CancelIcon />}
+          icon={<PendingIcon />}
           label={`Всего на модерации: ${totalPending}`}
           color="warning"
           size="medium"
@@ -169,13 +170,71 @@ const AdminDashboardPage = () => {
                 const key = `vacancies-${v.id}`;
                 return (
                   <Card key={v.id} variant="outlined">
-                    {/* ... остальной код для вакансий без изменений ... */}
+                    <CardContent>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                        <Chip label="Не опубликовано" size="small" color="warning" />
+                      </Stack>
+                      
+                      <Typography variant="h6" gutterBottom>
+                        {v.title}
+                      </Typography>
+                      
+                      {v.company_name && (
+                        <Typography variant="body2" color="text.secondary">
+                          Компания: {v.company_name}
+                        </Typography>
+                      )}
+                      
+                      {v.work_location && (
+                        <Typography variant="body2" color="text.secondary">
+                          📍 {v.work_location}
+                        </Typography>
+                      )}
+
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        label="Причина отклонения (минимум 10 символов) *"
+                        variant="outlined"
+                        value={rejectionReasons[key] || ''}
+                        onChange={(e) => updateRejectionReason('vacancies', v.id, e.target.value)}
+                        error={!!rejectionErrors[key]}
+                        helperText={rejectionErrors[key] || `${(rejectionReasons[key] || '').length}/10 символов`}
+                        sx={{ mt: 2 }}
+                      />
+                    </CardContent>
+                    <CardActions>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="success"
+                        startIcon={<CheckCircleIcon />}
+                        onClick={() => handlePublish('vacancies', v.id)}
+                      >
+                        Одобрить
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        startIcon={<CancelIcon />}
+                        onClick={() => handleReject('vacancies', v.id)}
+                        disabled={!rejectionReasons[key] || rejectionReasons[key].trim().length < 10}
+                      >
+                        Отклонить
+                      </Button>
+                    </CardActions>
                   </Card>
                 );
               })}
             </Stack>
           ) : (
-            <Alert severity="info">Нет вакансий на модерации</Alert>
+            <Card variant="outlined">
+              <CardContent>
+                <Alert severity="info">Нет вакансий на модерации</Alert>
+              </CardContent>
+            </Card>
           )}
         </Grid>
 
@@ -194,17 +253,75 @@ const AdminDashboardPage = () => {
                 const key = `internships-${i.id}`;
                 return (
                   <Card key={i.id} variant="outlined">
-                    {/* ... остальной код для стажировок без изменений ... */}
+                    <CardContent>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                        <Chip label="Не опубликовано" size="small" color="warning" />
+                      </Stack>
+                      
+                      <Typography variant="h6" gutterBottom>
+                        {i.title}
+                      </Typography>
+                      
+                      {i.company_name && (
+                        <Typography variant="body2" color="text.secondary">
+                          Компания: {i.company_name}
+                        </Typography>
+                      )}
+                      
+                      {i.work_location && (
+                        <Typography variant="body2" color="text.secondary">
+                          📍 {i.work_location}
+                        </Typography>
+                      )}
+
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        label="Причина отклонения (минимум 10 символов) *"
+                        variant="outlined"
+                        value={rejectionReasons[key] || ''}
+                        onChange={(e) => updateRejectionReason('internships', i.id, e.target.value)}
+                        error={!!rejectionErrors[key]}
+                        helperText={rejectionErrors[key] || `${(rejectionReasons[key] || '').length}/10 символов`}
+                        sx={{ mt: 2 }}
+                      />
+                    </CardContent>
+                    <CardActions>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="success"
+                        startIcon={<CheckCircleIcon />}
+                        onClick={() => handlePublish('internships', i.id)}
+                      >
+                        Одобрить
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        startIcon={<CancelIcon />}
+                        onClick={() => handleReject('internships', i.id)}
+                        disabled={!rejectionReasons[key] || rejectionReasons[key].trim().length < 10}
+                      >
+                        Отклонить
+                      </Button>
+                    </CardActions>
                   </Card>
                 );
               })}
             </Stack>
           ) : (
-            <Alert severity="info">Нет стажировок на модерации</Alert>
+            <Card variant="outlined">
+              <CardContent>
+                <Alert severity="info">Нет стажировок на модерации</Alert>
+              </CardContent>
+            </Card>
           )}
         </Grid>
 
-        {/* Пользователи (новый раздел) */}
+        {/* Пользователи */}
         <Grid item xs={12} md={4}>
           <Box sx={{ mb: 2 }}>
             <Typography variant="h5" component="h2" gutterBottom>
@@ -271,7 +388,11 @@ const AdminDashboardPage = () => {
               })}
             </Stack>
           ) : (
-            <Alert severity="info">Нет заявок на регистрацию</Alert>
+            <Card variant="outlined">
+              <CardContent>
+                <Alert severity="info">Нет заявок на регистрацию</Alert>
+              </CardContent>
+            </Card>
           )}
         </Grid>
       </Grid>
