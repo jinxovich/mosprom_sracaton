@@ -87,7 +87,7 @@ const HomePage = () => {
             </Typography>
             <Chip label={items.vacancies.length} color="primary" />
           </Stack>
-          
+
           {items.vacancies.length > 0 ? (
             <Stack spacing={2}>
               {items.vacancies.map(v => (
@@ -102,16 +102,49 @@ const HomePage = () => {
                     <Typography variant="h5" gutterBottom>
                       {v.title}
                     </Typography>
+
                     {v.company_name && (
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                        {v.company_name}
+                        Компания: {v.company_name}
                       </Typography>
                     )}
+
+                    {v.work_location && (
+                      <Typography variant="body2" color="text.secondary">
+                        📍 Место работы: {v.work_location}
+                      </Typography>
+                    )}
+
+                    {v.work_schedule && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        🕒 График: {v.work_schedule}
+                      </Typography>
+                    )}
+
                     {v.responsibilities && (
                       <Typography variant="body2" sx={{ mt: 1 }}>
                         <strong>Обязанности:</strong> {v.responsibilities.slice(0, 150)}...
                       </Typography>
                     )}
+
+                    {v.requirements && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <strong>Требования:</strong> {v.requirements.slice(0, 150)}...
+                      </Typography>
+                    )}
+
+                    {v.conditions && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <strong>Условия:</strong> {v.conditions.slice(0, 150)}...
+                      </Typography>
+                    )}
+
+                    {v.additional_info && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <strong>Дополнительно:</strong> {v.additional_info.slice(0, 150)}...
+                      </Typography>
+                    )}
+
                     {(v.salary_min || v.salary_max) && (
                       <Typography variant="body2" color="primary" sx={{ mt: 1, fontWeight: 'bold' }}>
                         💰 {v.salary_min ? `от ${v.salary_min.toLocaleString()}` : ''} 
@@ -119,6 +152,7 @@ const HomePage = () => {
                       </Typography>
                     )}
                   </CardContent>
+
                   {user?.role === 'university' && (
                     <CardActions>
                       <Button 
