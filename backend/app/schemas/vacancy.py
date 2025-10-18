@@ -1,3 +1,4 @@
+# backend/app/schemas/vacancy.py
 from pydantic import BaseModel
 from typing import Optional
 
@@ -14,23 +15,15 @@ class VacancyBase(BaseModel):
     work_schedule: Optional[str] = None
     additional_info: Optional[str] = None
 
-# app/schemas/vacancy.py
-class Vacancy(VacancyBase):
-    id: int
-    is_published: bool
-    rejection_reason: Optional[str] = None  # ← НОВОЕ
-    owner_id: int
-    class Config:
-        from_attributes = True
-
 class VacancyCreate(VacancyBase):
     pass
 
 class Vacancy(VacancyBase):
     id: int
     is_published: bool
+    rejection_reason: Optional[str] = None  # ← ВАЖНО: это поле должно быть!
     owner_id: int
-
+    
     class Config:
         from_attributes = True
 
@@ -40,7 +33,7 @@ class VacancyPublic(VacancyBase):
     try:
         from pydantic import computed_field
     except ImportError:
-        computed_field = None  # для совместимости, если вдруг pydantic v1
+        computed_field = None
 
     if computed_field:
         @computed_field(return_type=str)
@@ -52,8 +45,6 @@ class VacancyPublic(VacancyBase):
                 parts.append(f"Требования: {self.requirements[:100]}...")
             return " ".join(parts) if parts else "Описание отсутствует"
     else:
-        # Fallback: поле не будет сериализовано автоматически на pydantic v1
-        # фронт может использовать responsibilities/requirements напрямую
         pass
 
     class Config:

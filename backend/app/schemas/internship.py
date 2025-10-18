@@ -1,5 +1,4 @@
-# schemas/internship.py
-
+# backend/app/schemas/internship.py
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -17,20 +16,12 @@ class InternshipBase(BaseModel):
 class InternshipCreate(InternshipBase):
     pass
 
-# app/schemas/internship.py
 class Internship(InternshipBase):
     id: int
     is_published: bool
-    rejection_reason: Optional[str] = None  # ← НОВОЕ
+    rejection_reason: Optional[str] = None  # ← ВАЖНО: это поле должно быть!
     owner_id: int
-    class Config:
-        from_attributes = True
-
-class Internship(InternshipBase):
-    id: int
-    is_published: bool
-    owner_id: int
-
+    
     class Config:
         from_attributes = True
 

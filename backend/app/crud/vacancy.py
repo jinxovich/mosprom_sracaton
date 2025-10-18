@@ -15,14 +15,23 @@ def get_multi(db: Session, *, skip: int = 0, limit: int = 100, is_published: boo
     ).offset(skip).limit(limit).all()
 
 def get_unpublished(db: Session):
-    """Получить все неопубликованные вакансии (для модерации)"""
-    return db.query(Vacancy).filter(Vacancy.is_published == False).all()
+    """Получить все неопубликованные вакансии (для модерации), исключая отклонённые"""
+    return db.query(Vacancy).filter(
+        Vacancy.is_published == False,
+        Vacancy.rejection_reason == None
+    ).all()
 
 def get_by_owner(db: Session, owner_id: int, include_rejected: bool = False):
     """Получить все вакансии конкретного пользователя (HR)"""
     query = db.query(Vacancy).filter(Vacancy.owner_id == owner_id)
+    
+    # Если НЕ нужно включать отклонённые, фильтруем их
     if not include_rejected:
-        query = query.filter(Vacancy.rejection_reason == None)
+        query = query.filter(
+            (Vacancy.rejection_reason == None) | (Vacancy.rejection_reason == "")
+        )
+    
+    # Если include_rejected=True, возвращаем ВСЕ вакансии (включая отклонённые)
     return query.all()
 
 def create_with_owner(db: Session, *, obj_in: VacancyCreate, owner_id: int):

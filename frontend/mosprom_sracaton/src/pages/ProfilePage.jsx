@@ -154,31 +154,67 @@ const ProfilePage = () => {
         setError(null);
 
         if (user.role === 'hr') {
-          const [vacanciesRes, rejectedRes, applicationsRes] = await Promise.all([
-            api.get('/vacancies/my'),
-            api.get('/vacancies/my?include_rejected=true'),
-            api.get('/applications/my-vacancy-applications'),
-          ]);
+          // Получаем активные вакансии (без отклонённых)
+          const vacanciesRes = await api.get('/vacancies/my');
           
-          const allVacancies = vacanciesRes.data;
-          const allWithRejected = rejectedRes.data;
+          // Получаем ВСЕ вакансии (включая отклонённые)
+          const allVacanciesRes = await api.get('/vacancies/my?include_rejected=true');
           
-          setMyVacancies(allVacancies.filter(v => !v.rejection_reason));
-          setRejectedItems(allWithRejected.filter(v => v.rejection_reason));
+          // Получаем отклики
+          const applicationsRes = await api.get('/applications/my-vacancy-applications');
+
+          console.log('Активные вакансии:', vacanciesRes.data);
+          console.log('Все вакансии:', allVacanciesRes.data);
+          
+          // ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ КАЖДОЙ ВАКАНСИИ
+          console.log('=== ДЕТАЛЬНАЯ ПРОВЕРКА ===');
+          allVacanciesRes.data.forEach((v, index) => {
+            console.log(`Вакансия ${index}:`, {
+              id: v.id,
+              title: v.title,
+              rejection_reason: v.rejection_reason,
+              rejection_reason_type: typeof v.rejection_reason,
+              rejection_reason_value: JSON.stringify(v.rejection_reason),
+              is_null: v.rejection_reason === null,
+              is_undefined: v.rejection_reason === undefined,
+              is_empty_string: v.rejection_reason === '',
+            });
+          });
+          
+          // Устанавливаем активные вакансии
+          setMyVacancies(vacanciesRes.data);
+          
+          // Фильтруем только отклонённые из всех вакансий
+          const rejected = allVacanciesRes.data.filter(v => {
+            const hasRejection = v.rejection_reason !== null && 
+                                  v.rejection_reason !== undefined && 
+                                  v.rejection_reason !== '';
+            console.log(`Вакансия "${v.title}" отклонена?`, hasRejection, '| reason:', v.rejection_reason);
+            return hasRejection;
+          });
+          console.log('Отклонённые вакансии:', rejected);
+          setRejectedItems(rejected);
+          
           setMyApplications(applicationsRes.data);
         }
 
         if (user.role === 'university') {
-          const [internshipsRes, rejectedRes] = await Promise.all([
-            api.get('/internships/my'),
-            api.get('/internships/my?include_rejected=true'),
-          ]);
+          // Получаем активные стажировки (без отклонённых)
+          const internshipsRes = await api.get('/internships/my');
           
-          const allInternships = internshipsRes.data;
-          const allWithRejected = rejectedRes.data;
+          // Получаем ВСЕ стажировки (включая отклонённые)
+          const allInternshipsRes = await api.get('/internships/my?include_rejected=true');
+
+          console.log('Активные стажировки:', internshipsRes.data);
+          console.log('Все стажировки:', allInternshipsRes.data);
           
-          setMyInternships(allInternships.filter(i => !i.rejection_reason));
-          setRejectedItems(allWithRejected.filter(i => i.rejection_reason));
+          // Устанавливаем активные стажировки
+          setMyInternships(internshipsRes.data);
+          
+          // Фильтруем только отклонённые из всех стажировок
+          const rejected = allInternshipsRes.data.filter(i => i.rejection_reason !== null && i.rejection_reason !== undefined);
+          console.log('Отклонённые стажировки:', rejected);
+          setRejectedItems(rejected);
         }
       } catch (err) {
         setError('Не удалось загрузить данные профиля. Попробуйте обновить страницу.');
@@ -250,7 +286,7 @@ const ProfilePage = () => {
         <Grid item xs={12} md={8}>
           <Stack spacing={4}>
             {/* БЛОК УВЕДОМЛЕНИЙ ОБ ОТКЛОНЕНИИ - ПОКАЗЫВАЕМ ПЕРВЫМ */}
-            {(user.role === 'hr' || user.role === 'university') && rejectedItems.length > 0 && (
+            {(user.role === 'hr' || user.role === 'university') && (
               <RejectionNotifications rejections={rejectedItems} />
             )}
 
@@ -291,7 +327,7 @@ const ProfilePage = () => {
                       ))}
                     </List>
                   ) : (
-                    <Alert severity="info">У вас пока нет созданных вакансий</Alert>
+                    <Alert severity="info">У вас пока нет активных вакансий</Alert>
                   )}
                 </CardContent>
               </Card>
@@ -334,7 +370,7 @@ const ProfilePage = () => {
                       ))}
                     </List>
                   ) : (
-                    <Alert severity="info">У вас пока нет созданных стажировок</Alert>
+                    <Alert severity="info">У вас пока нет активных стажировок</Alert>
                   )}
                 </CardContent>
               </Card>

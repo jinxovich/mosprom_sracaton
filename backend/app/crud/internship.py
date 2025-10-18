@@ -20,14 +20,23 @@ def get_multi(db: Session, *, skip: int = 0, limit: int = 100, is_published: boo
     )
 
 def get_unpublished(db: Session):
-    """Получить все неопубликованные стажировки (для модерации)"""
-    return db.query(Internship).filter(Internship.is_published == False).all()
+    """Получить все неопубликованные стажировки (для модерации), исключая отклонённые"""
+    return db.query(Internship).filter(
+        Internship.is_published == False,
+        Internship.rejection_reason == None
+    ).all()
 
 def get_by_owner(db: Session, owner_id: int, include_rejected: bool = False):
     """Получить все стажировки пользователя (владельца)"""
     query = db.query(Internship).filter(Internship.owner_id == owner_id)
+    
+    # Если НЕ нужно включать отклонённые, фильтруем их
     if not include_rejected:
-        query = query.filter(Internship.rejection_reason == None)
+        query = query.filter(
+            (Internship.rejection_reason == None) | (Internship.rejection_reason == "")
+        )
+    
+    # Если include_rejected=True, возвращаем ВСЕ стажировки (включая отклонённые)
     return query.all()
 
 def create_with_owner(db: Session, *, obj_in: InternshipCreate, owner_id: int):
