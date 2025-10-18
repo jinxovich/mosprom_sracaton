@@ -24,4 +24,4 @@ class Internship(Base):
     # Системные поля
     is_published = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    rejection_reason = Column(Text, nullable=True)  # ← НОВОЕ
+    rejection_reason = Column(String, nullable=True)

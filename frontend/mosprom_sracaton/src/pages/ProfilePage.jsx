@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import api from '../api';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Avatar, 
+import {
+  Box,
+  Typography,
+  Paper,
+  Avatar,
   Chip,
   Grid,
   Card,
@@ -17,38 +17,35 @@ import {
   Alert,
   CircularProgress,
   Stack,
-  Link,
-  Button
+  Button,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import BadgeIcon from '@mui/icons-material/Badge';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CancelIcon from '@mui/icons-material/Cancel';
 
-// НОВЫЙ КОМПОНЕНТ для отображения деталей отклика (анкета или файл)
+// Компонент для отображения деталей отклика
 const ApplicationDetails = ({ application }) => {
-  // Базовый URL вашего бэкенда для построения ссылок на файлы
-  const API_BASE_URL = 'http://localhost:8000'; 
+  const API_BASE_URL = 'http://localhost:8000';
 
-  // Пытаемся распарсить данные анкеты, если они есть
   let resumeData = null;
   if (application.resume_data) {
     try {
-      // resume_data из БД приходит как строка, ее нужно преобразовать в объект
-      resumeData = typeof application.resume_data === 'string' 
-        ? JSON.parse(application.resume_data) 
+      resumeData = typeof application.resume_data === 'string'
+        ? JSON.parse(application.resume_data)
         : application.resume_data;
     } catch (e) {
-      console.error("Ошибка парсинга JSON в resume_data:", e);
+      console.error('Ошибка парсинга JSON в resume_data:', e);
     }
   }
 
   return (
     <Box sx={{ mt: 1, p: 2, border: '1px solid #eee', borderRadius: 1 }}>
       {application.resume_file_path && (
-        <Button 
-          variant="outlined" 
-          startIcon={<DescriptionIcon />} 
+        <Button
+          variant="outlined"
+          startIcon={<DescriptionIcon />}
           href={`${API_BASE_URL}/${application.resume_file_path}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -58,14 +55,14 @@ const ApplicationDetails = ({ application }) => {
       )}
 
       {resumeData && (
-        <Box>
+        <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle2" gutterBottom>Данные из анкеты:</Typography>
           <List dense>
             {Object.entries(resumeData).map(([key, value]) => (
               <ListItem key={key} sx={{ p: 0 }}>
                 <ListItemText
                   primary={<strong>{key}:</strong>}
-                  secondary={value}
+                  secondary={value?.toString() || '—'}
                 />
               </ListItem>
             ))}
@@ -76,42 +73,76 @@ const ApplicationDetails = ({ application }) => {
   );
 };
 
+// Компонент для отображения уведомлений об отклонении
+const RejectionNotifications = ({ rejections }) => {
+  if (!rejections || rejections.length === 0) return null;
+
+  return (
+    <Card sx={{ mt: 2 }}>
+      <CardContent>
+        <Typography variant="h6" color="error" gutterBottom>
+          <CancelIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+          Отклонённые заявки
+        </Typography>
+        <List>
+          {rejections.map((rej) => (
+            <ListItem key={rej.id} divider>
+              <ListItemText
+                primary={`"${rej.title}"`}
+                secondary={
+                  <>
+                    <Typography variant="body2" color="error">
+                      Причина: {rej.rejection_reason || 'Не указана'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Отклонено: {new Date(rej.updated_at).toLocaleString('ru-RU')}
+                    </Typography>
+                  </>
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+      </CardContent>
+    </Card>
+  );
+};
 
 const ProfilePage = () => {
   const user = useAuthStore((state) => state.user);
   const [myVacancies, setMyVacancies] = useState([]);
-  
-  // ИЗМЕНЕНИЕ: Переименовали state для ясности
   const [myApplications, setMyApplications] = useState([]);
-  
+  const [rejectedItems, setRejectedItems] = useState([]); // Новые уведомления
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
-        // ИЗМЕНЕНИЕ: Логика загрузки данных для HR
+
         if (user.role === 'hr') {
-          // Выполняем запросы параллельно для скорости
           const [vacanciesRes, applicationsRes] = await Promise.all([
             api.get('/vacancies/my'),
-            api.get('/applications/my-vacancy-applications') // Эндпоинт для получения откликов
+            api.get('/applications/my-vacancy-applications'),
           ]);
-          setMyVacancies(vacanciesRes.data);
+          const allVacancies = vacanciesRes.data;
+          setMyVacancies(allVacancies.filter(v => !v.rejection_reason && v.is_published !== false)); // активные
+          setRejectedItems(allVacancies.filter(v => v.rejection_reason)); // отклонённые
           setMyApplications(applicationsRes.data);
         }
-        
-        // Для ВУЗов - загружаем их стажировки
+
         if (user.role === 'university') {
-          const res = await api.get('/internships/my'); // Предполагаем, что есть эндпоинт /my
-          setMyVacancies(res.data); // Можно использовать тот же state
+          const [internshipsRes] = await Promise.all([
+            api.get('/internships/my'),
+          ]);
+          const allInternships = internshipsRes.data;
+          setMyVacancies(allInternships.filter(i => !i.rejection_reason && i.is_published !== false));
+          setRejectedItems(allInternships.filter(i => i.rejection_reason));
         }
-        
       } catch (err) {
         setError('Не удалось загрузить данные профиля. Попробуйте обновить страницу.');
         console.error('Ошибка загрузки данных профиля:', err);
@@ -124,20 +155,19 @@ const ProfilePage = () => {
   }, [user]);
 
   if (!user) {
-    return (
-      <Alert severity="warning">
-        Пожалуйста, войдите в систему для просмотра профиля.
-      </Alert>
-    );
+    return <Alert severity="warning">Пожалуйста, войдите в систему для просмотра профиля.</Alert>;
   }
 
-  // Функции getRoleLabel и getRoleColor без изменений
   const getRoleLabel = (role) => ({
-    admin: 'Администратор ОЭЗ', hr: 'Представитель компании (HR)', university: 'Представитель ВУЗа'
+    admin: 'Администратор ОЭЗ',
+    hr: 'Представитель компании (HR)',
+    university: 'Представитель ВУЗа',
   })[role] || role;
 
   const getRoleColor = (role) => ({
-    admin: 'error', hr: 'primary', university: 'secondary'
+    admin: 'error',
+    hr: 'primary',
+    university: 'secondary',
   })[role] || 'default';
 
   if (loading) {
@@ -157,7 +187,6 @@ const ProfilePage = () => {
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       <Grid container spacing={4}>
-        {/* Левая колонка с информацией о пользователе (без изменений) */}
         <Grid item xs={12} md={4}>
           <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
             <Avatar sx={{ width: 120, height: 120, mx: 'auto', mb: 2, bgcolor: 'primary.main', fontSize: '3rem' }}>
@@ -181,10 +210,8 @@ const ProfilePage = () => {
           </Paper>
         </Grid>
 
-        {/* Правая колонка с контентом */}
         <Grid item xs={12} md={8}>
           <Stack spacing={4}>
-            {/* Блок с вакансиями или стажировками */}
             {(user.role === 'hr' || user.role === 'university') && (
               <Card>
                 <CardContent>
@@ -212,7 +239,6 @@ const ProfilePage = () => {
               </Card>
             )}
 
-            {/* НОВЫЙ БЛОК: Отклики для HR */}
             {user.role === 'hr' && (
               <Card>
                 <CardContent>
@@ -245,10 +271,13 @@ const ProfilePage = () => {
               </Card>
             )}
 
+            {/* НОВЫЙ БЛОК: Уведомления об отклонении */}
+            {(user.role === 'hr' || user.role === 'university') && (
+              <RejectionNotifications rejections={rejectedItems} />
+            )}
+
             {user.role === 'admin' && (
-              <Alert severity="info">
-                Для управления контентом перейдите в раздел "Модерация"
-              </Alert>
+              <Alert severity="info">Для управления контентом перейдите в раздел "Модерация"</Alert>
             )}
           </Stack>
         </Grid>

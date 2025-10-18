@@ -32,4 +32,4 @@ class Vacancy(Base):
     # ===== СИСТЕМНЫЕ ПОЛЯ =====
     is_published = Column(Boolean, default=False)           # Статус публикации (по умолчанию на модерации)
     owner_id = Column(Integer, ForeignKey("users.id"))      # ID владельца (HR)
-    rejection_reason = Column(Text, nullable=True)  # ← НОВОЕ
+    rejection_reason = Column(String, nullable=True)

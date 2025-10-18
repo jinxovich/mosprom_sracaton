@@ -140,11 +140,13 @@ def search(
 
 def reject_vacancy(db: Session, *, vacancy_id: int, rejection_reason: str):
     vacancy = db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
-    if vacancy:
-        vacancy.is_published = False
-        vacancy.rejection_reason = rejection_reason
-        db.commit()
-        db.refresh(vacancy)
+    if not vacancy:
+        return None
+    vacancy.rejection_reason = rejection_reason
+    vacancy.is_published = False  # или статус 'rejected', если есть
+    db.add(vacancy)
+    db.commit()
+    db.refresh(vacancy)
     return vacancy
 
 def get_statistics(db: Session):

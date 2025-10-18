@@ -1,16 +1,14 @@
-// src/pages/HomePage.jsx
-
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useAuthStore } from '../store/authStore';
-import { 
-  Typography, 
-  CircularProgress, 
-  Box, 
-  Card, 
-  CardContent, 
-  CardActions, 
-  Button, 
+import {
+  Typography,
+  CircularProgress,
+  Box,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
   Grid,
   Alert,
   Chip,
@@ -26,7 +24,7 @@ const HomePage = () => {
   const [items, setItems] = useState({ vacancies: [], internships: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
@@ -52,9 +50,6 @@ const HomePage = () => {
     fetchAll();
   }, []);
 
-  // ИСПРАВЛЕНО: Эта функция больше не нужна, так как отклик происходит на отдельной странице
-  // const handleApply = ...
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
@@ -70,10 +65,8 @@ const HomePage = () => {
       </Typography>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      
+
       <Grid container spacing={4}>
-        {/* Вакансии */}
-        {/* ИСПРАВЛЕНО: Grid prop 'size' заменен на 'item' */}
         <Grid item xs={12} md={6}>
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
             <WorkIcon color="primary" fontSize="large" />
@@ -86,9 +79,9 @@ const HomePage = () => {
           {items.vacancies.length > 0 ? (
             <Stack spacing={2}>
               {items.vacancies.map(v => (
-                <Card key={v.id} variant="outlined" sx={{ 
+                <Card key={v.id} variant="outlined" sx={{
                   transition: 'all 0.3s',
-                  '&:hover': { 
+                  '&:hover': {
                     boxShadow: 3,
                     transform: 'translateY(-2px)'
                   }
@@ -112,7 +105,7 @@ const HomePage = () => {
 
                     {v.work_schedule && (
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        🕒 График: {v.work_schedule}  
+                        🕒 График: {v.work_schedule}
                       </Typography>
                     )}
 
@@ -142,7 +135,7 @@ const HomePage = () => {
 
                     {(v.salary_min || v.salary_max) && (
                       <Typography variant="body2" color="primary" sx={{ mt: 1, fontWeight: 'bold' }}>
-                        💰 {v.salary_min ? `от ${v.salary_min.toLocaleString()}` : ''} 
+                        💰 {v.salary_min ? `от ${v.salary_min.toLocaleString()}` : ''}
                         {v.salary_max ? ` до ${v.salary_max.toLocaleString()}` : ''} {v.salary_currency}
                       </Typography>
                     )}
@@ -150,11 +143,10 @@ const HomePage = () => {
 
                   {(user?.role === 'applicant') && (
                     <CardActions>
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         variant="contained"
                         onClick={() => {
-                          // ИСПРАВЛЕНО: Используется абсолютный путь со слэшем в начале
                           navigate(`/apply/vacancy/${v.id}`);
                         }}
                       >
@@ -169,8 +161,7 @@ const HomePage = () => {
             <Alert severity="info">Опубликованных вакансий пока нет.</Alert>
           )}
         </Grid>
-        
-        {/* Стажировки */}
+
         <Grid item xs={12} md={6}>
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
             <SchoolIcon color="secondary" fontSize="large" />
@@ -183,9 +174,9 @@ const HomePage = () => {
           {items.internships.length > 0 ? (
             <Stack spacing={2}>
               {items.internships.map(i => (
-                <Card key={i.id} variant="outlined" sx={{ 
+                <Card key={i.id} variant="outlined" sx={{
                   transition: 'all 0.3s',
-                  '&:hover': { 
+                  '&:hover': {
                     boxShadow: 3,
                     transform: 'translateY(-2px)'
                   }
@@ -221,7 +212,7 @@ const HomePage = () => {
                     )}
                     {(i.salary_min || i.salary_max) && (
                       <Typography variant="body2" color="primary" sx={{ mt: 1, fontWeight: 'bold' }}>
-                        💰 {i.salary_min ? `от ${i.salary_min.toLocaleString()}` : ''} 
+                        💰 {i.salary_min ? `от ${i.salary_min.toLocaleString()}` : ''}
                         {i.salary_max ? ` до ${i.salary_max.toLocaleString()}` : ''} {i.salary_currency}
                       </Typography>
                     )}
@@ -232,7 +223,6 @@ const HomePage = () => {
                         size="small"
                         variant="contained"
                         onClick={() => {
-                          // ИСПРАВЛЕНО: Используется абсолютный путь со слэшем в начале
                           navigate(`/apply/internship/${i.id}`);
                         }}
                       >
