@@ -14,6 +14,15 @@ class VacancyBase(BaseModel):
     work_schedule: Optional[str] = None
     additional_info: Optional[str] = None
 
+# app/schemas/vacancy.py
+class Vacancy(VacancyBase):
+    id: int
+    is_published: bool
+    rejection_reason: Optional[str] = None  # ← НОВОЕ
+    owner_id: int
+    class Config:
+        from_attributes = True
+
 class VacancyCreate(VacancyBase):
     pass
 

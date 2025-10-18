@@ -2,6 +2,8 @@
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Float
 from app.core.database import Base
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Float
+
 
 class Internship(Base):
     __tablename__ = "internships"
@@ -22,3 +24,4 @@ class Internship(Base):
     # Системные поля
     is_published = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rejection_reason = Column(Text, nullable=True)  # ← НОВОЕ

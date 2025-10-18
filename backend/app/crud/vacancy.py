@@ -138,6 +138,15 @@ def search(
     
     return query.offset(skip).limit(limit).all()
 
+def reject_vacancy(db: Session, *, vacancy_id: int, rejection_reason: str):
+    vacancy = db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
+    if vacancy:
+        vacancy.is_published = False
+        vacancy.rejection_reason = rejection_reason
+        db.commit()
+        db.refresh(vacancy)
+    return vacancy
+
 def get_statistics(db: Session):
     """
     Получить статистику по вакансиям

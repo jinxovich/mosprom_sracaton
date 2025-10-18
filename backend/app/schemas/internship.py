@@ -17,6 +17,15 @@ class InternshipBase(BaseModel):
 class InternshipCreate(InternshipBase):
     pass
 
+# app/schemas/internship.py
+class Internship(InternshipBase):
+    id: int
+    is_published: bool
+    rejection_reason: Optional[str] = None  # ← НОВОЕ
+    owner_id: int
+    class Config:
+        from_attributes = True
+
 class Internship(InternshipBase):
     id: int
     is_published: bool

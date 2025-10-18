@@ -95,6 +95,15 @@ def search(
 
     return query.offset(skip).limit(limit).all()
 
+def reject_internship(db: Session, *, internship_id: int, rejection_reason: str):
+    internship = db.query(Internship).filter(Internship.id == internship_id).first()
+    if internship:
+        internship.is_published = False
+        internship.rejection_reason = rejection_reason
+        db.commit()
+        db.refresh(internship)
+    return internship
+
 def get_statistics(db: Session):
     """
     Статистика по стажировкам

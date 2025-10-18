@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Float
 from app.core.database import Base
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Float
 
 class Vacancy(Base):
     __tablename__ = "vacancies"
@@ -31,3 +32,4 @@ class Vacancy(Base):
     # ===== СИСТЕМНЫЕ ПОЛЯ =====
     is_published = Column(Boolean, default=False)           # Статус публикации (по умолчанию на модерации)
     owner_id = Column(Integer, ForeignKey("users.id"))      # ID владельца (HR)
+    rejection_reason = Column(Text, nullable=True)  # ← НОВОЕ

@@ -1,6 +1,7 @@
 # app/api/v1/applications.py
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 import json
@@ -17,7 +18,6 @@ router = APIRouter()
 def save_upload_file(upload_file: UploadFile, folder: str = "uploads/resumes") -> str:
     os.makedirs(folder, exist_ok=True)
     file_ext = os.path.splitext(upload_file.filename)[1]
-    # Защита от пустого расширения
     if not file_ext:
         file_ext = ".pdf"
     filename = f"{uuid.uuid4()}{file_ext}"
@@ -25,6 +25,7 @@ def save_upload_file(upload_file: UploadFile, folder: str = "uploads/resumes") -
     with open(file_path, "wb") as f:
         f.write(upload_file.file.read())
     return file_path
+
 
 @router.post("/vacancy/{vacancy_id}", response_model=Application)
 async def apply_to_vacancy(
@@ -48,11 +49,11 @@ async def apply_to_vacancy(
     if resume_file:
         file_path = save_upload_file(resume_file)
 
-    # ПЕРЕДАЁМ СТРОКУ напрямую — Pydantic сам распарсит её
+    # Передаём СТРОКУ напрямую — Pydantic сам распарсит благодаря Json[Dict]
     app_create = ApplicationCreate(
         vacancy_id=vacancy_id,
         resume_file_path=file_path,
-        resume_data=resume_data  # ← ЭТО СТРОКА, НЕ dict!
+        resume_data=resume_data  # ← строка, не dict!
     )
     return crud.application.create(db=db, obj_in=app_create, applicant_id=current_user.id)
 
@@ -79,13 +80,13 @@ async def apply_to_internship(
     if resume_file:
         file_path = save_upload_file(resume_file)
 
-    # ПЕРЕДАЁМ СТРОКУ напрямую
     app_create = ApplicationCreate(
         internship_id=internship_id,
         resume_file_path=file_path,
-        resume_data=resume_data  # ← СТРОКА!
+        resume_data=resume_data  # ← строка!
     )
     return crud.application.create(db=db, obj_in=app_create, applicant_id=current_user.id)
+
 
 # HR: получить все отклики на свои вакансии
 @router.get("/my-vacancy-applications", response_model=list[Application])
@@ -123,3 +124,47 @@ def get_my_internship_applications(
     return db.query(models.Application).filter(
         models.Application.internship_id.in_(internship_ids)
     ).all()
+
+
+# НОВЫЙ ЭНДПОИНТ: скачивание резюме по имени файла
+@router.get("/resume/{filename}")
+async def download_resume(
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role != "hr":
+        raise HTTPException(status_code=403, detail="Only HR can download resumes")
+
+    file_path = os.path.join("uploads", "resumes", filename)
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="Resume file not found")
+
+    # Проверка: файл должен быть привязан к вакансии или стажировке этого HR
+    application = db.query(models.Application).filter(
+        models.Application.resume_file_path == os.path.join("uploads", "resumes", filename)
+    ).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    # Проверка вакансии
+    if application.vacancy_id:
+        vacancy = db.query(models.Vacancy).filter(
+            models.Vacancy.id == application.vacancy_id
+        ).first()
+        if not vacancy or vacancy.owner_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You don't own this application")
+
+    # Проверка стажировки
+    if application.internship_id:
+        internship = db.query(models.Internship).filter(
+            models.Internship.id == application.internship_id
+        ).first()
+        if not internship or internship.owner_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You don't own this application")
+
+    return FileResponse(
+        file_path,
+        media_type='application/octet-stream',
+        filename=filename
+    )
