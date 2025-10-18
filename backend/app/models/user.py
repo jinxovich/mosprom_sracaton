@@ -11,3 +11,4 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(Enum("admin", "hr", "university", "applicant", name="userrole"), nullable=False)
     is_active = Column(Boolean, default=True)
+    rejection_reason = Column(String, nullable=True)  # Новое поле для причины отклонения

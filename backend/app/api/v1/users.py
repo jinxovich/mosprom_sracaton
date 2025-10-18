@@ -20,4 +20,5 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     
     hashed_pw = get_password_hash(user.password)
     
-    return crud.user.create(db=db, obj_in=user)
+    # Передаём UserCreate объект, но добавляем hashed_password и is_active в CRUD
+    return crud.user.create(db=db, obj_in=user, hashed_password=hashed_pw)
