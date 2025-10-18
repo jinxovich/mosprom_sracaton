@@ -9,23 +9,21 @@ Base.metadata.create_all(bind=engine)
 # Инициализируем FastAPI-приложение
 app = FastAPI(title="MosProm ОЭЗ Backend")
 
-# --- CORS Middleware ---
-# Разрешаем запросы с фронтенда (React/Vue и т.д.)
+
 origins = [
-    "http://localhost:5173",  # ← добавь эту строку
-    "http://127.0.0.1:5173",  # ← и эту
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],      # GET, POST, PUT, DELETE и т.д.
-    allow_headers=["*"],      # Любые заголовки (включая Authorization)
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- Подключение роутеров ---

@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -13,20 +15,26 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import CreateVacancyPage from './pages/CreateVacancyPage';
 import CreateInternshipPage from './pages/CreateInternshipPage';
 import ProfilePage from './pages/ProfilePage';
+import ApplyPage from './pages/ApplyPage';
 
 function App() {
   return (
     <Routes>
-      {/* Все страницы будут обернуты в Layout с шапкой и подвалом */}
       <Route path="/" element={<Layout />}>
-        {/* --- Публичные роуты --- */}
         <Route index element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
 
-        {/* --- Защищенные роуты --- */}
-        
-        {/* Профиль - доступен всем авторизованным */}
+        {/* ИСПРАВЛЕНО: Маршрут для отклика находится здесь, внутри основного Layout */}
+        <Route
+          path="apply/:type/:id"
+          element={
+            <ProtectedRoute roles={['applicant']}>
+              <ApplyPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="profile"
           element={
@@ -36,7 +44,6 @@ function App() {
           }
         />
         
-        {/* Доступ только для HR */}
         <Route
           path="create-vacancy"
           element={
@@ -46,7 +53,6 @@ function App() {
           }
         />
         
-        {/* Доступ только для ВУЗов */}
         <Route
           path="create-internship"
           element={
@@ -56,7 +62,6 @@ function App() {
           }
         />
         
-        {/* Доступ только для Админов */}
         <Route
           path="admin-dashboard"
           element={
@@ -66,6 +71,8 @@ function App() {
           }
         />
       </Route>
+
+      {/* ИСПРАВЛЕНО: Дублирующийся маршрут отсюда удален */}
     </Routes>
   );
 }

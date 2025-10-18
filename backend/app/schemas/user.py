@@ -1,15 +1,21 @@
-from pydantic import BaseModel
-from typing import Literal
+# app/schemas/user.py
 
-class UserBase(BaseModel):
-    email: str
-    role: Literal["admin", "hr", "university"]
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    role: str  # Допустимые: 'hr', 'university', 'applicant'
+
+class UserLogin(BaseModel):
+    email: EmailStr
     password: str
 
-class User(UserBase):
+class UserResponse(BaseModel):
     id: int
+    email: EmailStr
+    role: str
 
     class Config:
         from_attributes = True

@@ -1,3 +1,5 @@
+// src/pages/HomePage.jsx
+
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useAuthStore } from '../store/authStore';
@@ -16,8 +18,11 @@ import {
 } from '@mui/material';
 import WorkIcon from '@mui/icons-material/Work';
 import SchoolIcon from '@mui/icons-material/School';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   const [items, setItems] = useState({ vacancies: [], internships: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,19 +52,8 @@ const HomePage = () => {
     fetchAll();
   }, []);
 
-  const handleApply = async (type, id) => {
-    if (!user) {
-        alert('Для отклика необходимо войти в систему.');
-        return;
-    }
-    try {
-      await api.post(`/applications/${type}/${id}`);
-      alert('Вы успешно откликнулись!');
-    } catch (err) {
-      alert('Ошибка при отклике. Возможно, вы уже откликались или у вас нет прав.');
-      console.error(err);
-    }
-  };
+  // ИСПРАВЛЕНО: Эта функция больше не нужна, так как отклик происходит на отдельной странице
+  // const handleApply = ...
 
   if (loading) {
     return (
@@ -79,7 +73,8 @@ const HomePage = () => {
       
       <Grid container spacing={4}>
         {/* Вакансии */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* ИСПРАВЛЕНО: Grid prop 'size' заменен на 'item' */}
+        <Grid item xs={12} md={6}>
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
             <WorkIcon color="primary" fontSize="large" />
             <Typography variant="h4" component="h2">
@@ -117,7 +112,7 @@ const HomePage = () => {
 
                     {v.work_schedule && (
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        🕒 График: {v.work_schedule}
+                        🕒 График: {v.work_schedule}  
                       </Typography>
                     )}
 
@@ -153,12 +148,15 @@ const HomePage = () => {
                     )}
                   </CardContent>
 
-                  {user?.role === 'university' && (
+                  {(user?.role === 'applicant') && (
                     <CardActions>
                       <Button 
                         size="small" 
                         variant="contained"
-                        onClick={() => handleApply('vacancy', v.id)}
+                        onClick={() => {
+                          // ИСПРАВЛЕНО: Используется абсолютный путь со слэшем в начале
+                          navigate(`/apply/vacancy/${v.id}`);
+                        }}
                       >
                         Откликнуться
                       </Button>
@@ -173,7 +171,7 @@ const HomePage = () => {
         </Grid>
         
         {/* Стажировки */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
             <SchoolIcon color="secondary" fontSize="large" />
             <Typography variant="h4" component="h2">
@@ -228,13 +226,15 @@ const HomePage = () => {
                       </Typography>
                     )}
                   </CardContent>
-                  {user?.role === 'university' && (
+                  {(user?.role === 'applicant') && (
                     <CardActions>
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         variant="contained"
-                        color="secondary"
-                        onClick={() => handleApply('internship', i.id)}
+                        onClick={() => {
+                          // ИСПРАВЛЕНО: Используется абсолютный путь со слэшем в начале
+                          navigate(`/apply/internship/${i.id}`);
+                        }}
                       >
                         Откликнуться
                       </Button>

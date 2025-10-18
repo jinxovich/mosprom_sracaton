@@ -143,50 +143,49 @@ try:
     db.commit()
     
     print("\nСоздание тестовых стажировок с полными данными...")
-    
+
     internships = [
         Internship(
             title="Летняя стажировка для студентов",
-            university_name="МГУ им. Ломоносова",
-            education_level="Бакалавриат",
-            education_directions="Информатика и вычислительная техника, Программная инженерия",
-            description="3-месячная стажировка в IT-отделе компании-резидента ОЭЗ. Работа над реальными проектами под руководством опытных наставников.",
-            location="Москва, ОЭЗ Технополис",
-            format="Очная",
-            duration_months=3,
-            payment_conditions="Стипендия 30 000 руб/мес",
-            additional_info="Возможность трудоустройства после стажировки",
+            company_name="ТехноКомпани",
+            work_location="МИЭТ",
+            work_schedule="IT",
+            responsibilities="Разработка внутренних инструментов, участие в командных митингах",
+            requirements="Знание Python, базовое понимание Git, студент 3+ курса",
+            salary_min=30000,
+            salary_max=40000,
+            salary_currency="RUB",
             owner_id=uni1.id,
             is_published=True
         ),
         Internship(
-            title="Производственная практика",
-            university_name="МГТУ им. Баумана",
-            education_level="Магистратура",
-            education_directions="Автоматизация технологических процессов, Робототехника",
-            description="Практика на предприятиях ОЭЗ с возможностью применить теоретические знания",
-            location="Москва, ОЭЗ Технополис",
-            format="Очная",
-            duration_months=2,
-            payment_conditions="Оплачиваемая практика",
+            title="Стажировка в отделе HR",
+            company_name="ИнноватеТех",
+            work_location="АЛАБУШЕВО",
+            work_schedule="HR",
+            responsibilities="Помощь в подборе персонала, организация собеседований",
+            requirements="Коммуникабельность, знание Excel, студент гуманитарного направления",
+            salary_min=25000,
+            salary_max=35000,
+            salary_currency="RUB",
             owner_id=uni2.id,
             is_published=True
         ),
         Internship(
-            title="Научная стажировка",
-            university_name="МГУ им. Ломоносова",
-            education_level="Аспирантура",
-            education_directions="Компьютерные науки, Искусственный интеллект",
-            description="Участие в исследовательских проектах резидентов ОЭЗ",
-            location="Москва, ОЭЗ Технополис",
-            format="Гибридная",
-            duration_months=6,
-            payment_conditions="Грант 50 000 руб/мес",
+            title="Стажировка в микроэлектронике",
+            company_name="АНГСТРЕМ",
+            work_location="РУДНЕВО",
+            work_schedule="Микроэлектроника",
+            responsibilities="Участие в лабораторных испытаниях, документирование результатов",
+            requirements="Студент технического ВУЗа, знание основ электроники",
+            salary_min=40000,
+            salary_max=50000,
+            salary_currency="RUB",
             owner_id=uni1.id,
             is_published=False  # На модерации
         ),
     ]
-    
+
     for i in internships:
         db.add(i)
         status = "✓ Опубликовано" if i.is_published else "⏳ На модерации"
