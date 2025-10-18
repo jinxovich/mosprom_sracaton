@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+# backend/app/api/v1/internships.py
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app import crud, models
 from app.schemas.internship import InternshipCreate, Internship, InternshipPublic
@@ -15,6 +17,20 @@ def read_internships(
     limit: int = 100,
 ):
     return crud.internship.get_multi(db, skip=skip, limit=limit, is_published=True)
+
+@router.get("/my", response_model=list[Internship])
+def read_my_internships(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    include_rejected: bool = Query(False, description="Включить отклонённые стажировки")
+):
+    """
+    Получить все стажировки текущего пользователя (университет)
+    """
+    if current_user.role != "university":
+        raise HTTPException(status_code=403, detail="Only universities can view their internships")
+    
+    return crud.internship.get_by_owner(db, owner_id=current_user.id, include_rejected=include_rejected)
 
 @router.post("/", response_model=Internship)
 def create_internship(

@@ -1,3 +1,4 @@
+// frontend/mosprom_sracaton/src/pages/ProfilePage.jsx
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import api from '../api';
@@ -19,11 +20,12 @@ import {
   Stack,
   Button,
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import BadgeIcon from '@mui/icons-material/Badge';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
 
 // Компонент для отображения деталей отклика
 const ApplicationDetails = ({ application }) => {
@@ -78,28 +80,54 @@ const RejectionNotifications = ({ rejections }) => {
   if (!rejections || rejections.length === 0) return null;
 
   return (
-    <Card sx={{ mt: 2 }}>
+    <Card sx={{ mt: 2, border: '2px solid', borderColor: 'error.main' }}>
       <CardContent>
         <Typography variant="h6" color="error" gutterBottom>
           <CancelIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
-          Отклонённые заявки
+          Отклонённые заявки ({rejections.length})
         </Typography>
+        <Divider sx={{ mb: 2 }} />
         <List>
           {rejections.map((rej) => (
-            <ListItem key={rej.id} divider>
+            <ListItem 
+              key={rej.id} 
+              divider
+              sx={{ 
+                bgcolor: 'error.light', 
+                borderRadius: 1, 
+                mb: 1,
+                flexDirection: 'column',
+                alignItems: 'flex-start'
+              }}
+            >
               <ListItemText
-                primary={`"${rej.title}"`}
+                primary={
+                  <Typography variant="h6" color="error.dark">
+                    "{rej.title}"
+                  </Typography>
+                }
                 secondary={
-                  <>
-                    <Typography variant="body2" color="error">
-                      Причина: {rej.rejection_reason || 'Не указана'}
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="error.dark" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                      ❌ Причина отклонения:
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Отклонено: {new Date(rej.updated_at).toLocaleString('ru-RU')}
+                    <Typography variant="body1" color="text.primary" sx={{ 
+                      bgcolor: 'white', 
+                      p: 1, 
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'error.light'
+                    }}>
+                      {rej.rejection_reason || 'Не указана'}
                     </Typography>
-                  </>
+                  </Box>
                 }
               />
+              {rej.company_name && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                  Компания: {rej.company_name}
+                </Typography>
+              )}
             </ListItem>
           ))}
         </List>
@@ -111,8 +139,9 @@ const RejectionNotifications = ({ rejections }) => {
 const ProfilePage = () => {
   const user = useAuthStore((state) => state.user);
   const [myVacancies, setMyVacancies] = useState([]);
+  const [myInternships, setMyInternships] = useState([]);
   const [myApplications, setMyApplications] = useState([]);
-  const [rejectedItems, setRejectedItems] = useState([]); // Новые уведомления
+  const [rejectedItems, setRejectedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -125,23 +154,31 @@ const ProfilePage = () => {
         setError(null);
 
         if (user.role === 'hr') {
-          const [vacanciesRes, applicationsRes] = await Promise.all([
+          const [vacanciesRes, rejectedRes, applicationsRes] = await Promise.all([
             api.get('/vacancies/my'),
+            api.get('/vacancies/my?include_rejected=true'),
             api.get('/applications/my-vacancy-applications'),
           ]);
+          
           const allVacancies = vacanciesRes.data;
-          setMyVacancies(allVacancies.filter(v => !v.rejection_reason && v.is_published !== false)); // активные
-          setRejectedItems(allVacancies.filter(v => v.rejection_reason)); // отклонённые
+          const allWithRejected = rejectedRes.data;
+          
+          setMyVacancies(allVacancies.filter(v => !v.rejection_reason));
+          setRejectedItems(allWithRejected.filter(v => v.rejection_reason));
           setMyApplications(applicationsRes.data);
         }
 
         if (user.role === 'university') {
-          const [internshipsRes] = await Promise.all([
+          const [internshipsRes, rejectedRes] = await Promise.all([
             api.get('/internships/my'),
+            api.get('/internships/my?include_rejected=true'),
           ]);
+          
           const allInternships = internshipsRes.data;
-          setMyVacancies(allInternships.filter(i => !i.rejection_reason && i.is_published !== false));
-          setRejectedItems(allInternships.filter(i => i.rejection_reason));
+          const allWithRejected = rejectedRes.data;
+          
+          setMyInternships(allInternships.filter(i => !i.rejection_reason));
+          setRejectedItems(allWithRejected.filter(i => i.rejection_reason));
         }
       } catch (err) {
         setError('Не удалось загрузить данные профиля. Попробуйте обновить страницу.');
@@ -212,11 +249,16 @@ const ProfilePage = () => {
 
         <Grid item xs={12} md={8}>
           <Stack spacing={4}>
-            {(user.role === 'hr' || user.role === 'university') && (
+            {/* БЛОК УВЕДОМЛЕНИЙ ОБ ОТКЛОНЕНИИ - ПОКАЗЫВАЕМ ПЕРВЫМ */}
+            {(user.role === 'hr' || user.role === 'university') && rejectedItems.length > 0 && (
+              <RejectionNotifications rejections={rejectedItems} />
+            )}
+
+            {user.role === 'hr' && (
               <Card>
                 <CardContent>
                   <Typography variant="h5" gutterBottom>
-                    {user.role === 'hr' ? 'Мои вакансии' : 'Мои стажировки'}
+                    Мои вакансии
                   </Typography>
                   <Divider sx={{ my: 2 }} />
                   {myVacancies.length > 0 ? (
@@ -225,15 +267,74 @@ const ProfilePage = () => {
                         <ListItem key={item.id} divider>
                           <ListItemText
                             primary={item.title}
-                            secondary={`Статус: ${item.is_published ? 'Опубликовано' : 'На модерации'}`}
+                            secondary={
+                              <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                                {item.is_published ? (
+                                  <Chip 
+                                    icon={<CheckCircleIcon />} 
+                                    label="Опубликовано" 
+                                    color="success" 
+                                    size="small" 
+                                  />
+                                ) : (
+                                  <Chip 
+                                    icon={<PendingIcon />} 
+                                    label="На модерации" 
+                                    color="warning" 
+                                    size="small" 
+                                  />
+                                )}
+                              </Stack>
+                            }
                           />
                         </ListItem>
                       ))}
                     </List>
                   ) : (
-                    <Alert severity="info">
-                      {user.role === 'hr' ? 'У вас пока нет созданных вакансий' : 'У вас пока нет созданных стажировок'}
-                    </Alert>
+                    <Alert severity="info">У вас пока нет созданных вакансий</Alert>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {user.role === 'university' && (
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    Мои стажировки
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+                  {myInternships.length > 0 ? (
+                    <List>
+                      {myInternships.map((item) => (
+                        <ListItem key={item.id} divider>
+                          <ListItemText
+                            primary={item.title}
+                            secondary={
+                              <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                                {item.is_published ? (
+                                  <Chip 
+                                    icon={<CheckCircleIcon />} 
+                                    label="Опубликовано" 
+                                    color="success" 
+                                    size="small" 
+                                  />
+                                ) : (
+                                  <Chip 
+                                    icon={<PendingIcon />} 
+                                    label="На модерации" 
+                                    color="warning" 
+                                    size="small" 
+                                  />
+                                )}
+                              </Stack>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  ) : (
+                    <Alert severity="info">У вас пока нет созданных стажировок</Alert>
                   )}
                 </CardContent>
               </Card>
@@ -269,11 +370,6 @@ const ProfilePage = () => {
                   )}
                 </CardContent>
               </Card>
-            )}
-
-            {/* НОВЫЙ БЛОК: Уведомления об отклонении */}
-            {(user.role === 'hr' || user.role === 'university') && (
-              <RejectionNotifications rejections={rejectedItems} />
             )}
 
             {user.role === 'admin' && (

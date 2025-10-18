@@ -55,6 +55,7 @@ def get_vacancy_statistics(
 def read_my_vacancies(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
+    include_rejected: bool = Query(False, description="Включить отклонённые вакансии")
 ):
     """
     Получить все вакансии текущего пользователя (HR)
@@ -62,7 +63,7 @@ def read_my_vacancies(
     if current_user.role != "hr":
         raise HTTPException(status_code=403, detail="Only HR can view their vacancies")
     
-    return crud.vacancy.get_by_owner(db, owner_id=current_user.id)
+    return crud.vacancy.get_by_owner(db, owner_id=current_user.id, include_rejected=include_rejected)
 
 @router.get("/remote", response_model=list[VacancyPublic])
 def read_remote_vacancies(

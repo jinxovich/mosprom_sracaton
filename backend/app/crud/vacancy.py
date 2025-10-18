@@ -1,6 +1,8 @@
+# backend/app/crud/vacancy.py
 from sqlalchemy.orm import Session
 from app.models import Vacancy
 from app.schemas.vacancy import VacancyCreate
+from typing import Optional
 
 def get(db: Session, id: int):
     """Получить вакансию по ID"""
@@ -16,9 +18,12 @@ def get_unpublished(db: Session):
     """Получить все неопубликованные вакансии (для модерации)"""
     return db.query(Vacancy).filter(Vacancy.is_published == False).all()
 
-def get_by_owner(db: Session, owner_id: int):
+def get_by_owner(db: Session, owner_id: int, include_rejected: bool = False):
     """Получить все вакансии конкретного пользователя (HR)"""
-    return db.query(Vacancy).filter(Vacancy.owner_id == owner_id).all()
+    query = db.query(Vacancy).filter(Vacancy.owner_id == owner_id)
+    if not include_rejected:
+        query = query.filter(Vacancy.rejection_reason == None)
+    return query.all()
 
 def create_with_owner(db: Session, *, obj_in: VacancyCreate, owner_id: int):
     """Создать новую вакансию с привязкой к владельцу"""
@@ -111,16 +116,6 @@ def search(
 ):
     """
     Поиск вакансий с фильтрацией
-    
-    Args:
-        db: Сессия базы данных
-        skip: Количество пропущенных записей (для пагинации)
-        limit: Максимальное количество записей
-        salary_min: Минимальная зарплата для фильтра
-        salary_max: Максимальная зарплата для фильтра
-        work_schedule: Фильтр по графику работы
-        location: Фильтр по местоположению
-        is_published: Фильтр по статусу публикации
     """
     query = db.query(Vacancy).filter(Vacancy.is_published == is_published)
     
@@ -143,19 +138,14 @@ def reject_vacancy(db: Session, *, vacancy_id: int, rejection_reason: str):
     if not vacancy:
         return None
     vacancy.rejection_reason = rejection_reason
-    vacancy.is_published = False  # или статус 'rejected', если есть
+    vacancy.is_published = False
     db.add(vacancy)
     db.commit()
     db.refresh(vacancy)
     return vacancy
 
 def get_statistics(db: Session):
-    """
-    Получить статистику по вакансиям
-    
-    Returns:
-        dict: Словарь со статистикой
-    """
+    """Получить статистику по вакансиям"""
     total = db.query(Vacancy).count()
     published = db.query(Vacancy).filter(Vacancy.is_published == True).count()
     pending = db.query(Vacancy).filter(Vacancy.is_published == False).count()

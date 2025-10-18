@@ -1,4 +1,4 @@
-# crud/internship.py
+# backend/app/crud/internship.py
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -23,9 +23,12 @@ def get_unpublished(db: Session):
     """Получить все неопубликованные стажировки (для модерации)"""
     return db.query(Internship).filter(Internship.is_published == False).all()
 
-def get_by_owner(db: Session, owner_id: int):
+def get_by_owner(db: Session, owner_id: int, include_rejected: bool = False):
     """Получить все стажировки пользователя (владельца)"""
-    return db.query(Internship).filter(Internship.owner_id == owner_id).all()
+    query = db.query(Internship).filter(Internship.owner_id == owner_id)
+    if not include_rejected:
+        query = query.filter(Internship.rejection_reason == None)
+    return query.all()
 
 def create_with_owner(db: Session, *, obj_in: InternshipCreate, owner_id: int):
     """Создать стажировку от имени владельца (автоматически на модерацию)"""
