@@ -1,20 +1,18 @@
-from pydantic import BaseModel
+# schemas/internship.py
+
+from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import date
 
 class InternshipBase(BaseModel):
     title: str
-    university_name: Optional[str] = None
-    education_level: Optional[str] = None
-    education_directions: Optional[str] = None
-    description: Optional[str] = None
-    location: Optional[str] = None
-    format: Optional[str] = None
-    duration_months: Optional[int] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    payment_conditions: Optional[str] = None
-    additional_info: Optional[str] = None
+    company_name: str
+    work_location: str
+    work_schedule: str
+    responsibilities: str
+    requirements: str
+    salary_min: Optional[float] = None
+    salary_max: Optional[float] = None
+    salary_currency: str = "RUB"
 
 class InternshipCreate(InternshipBase):
     pass

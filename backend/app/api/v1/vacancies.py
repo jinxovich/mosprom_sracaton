@@ -9,6 +9,7 @@ from app.core.security import get_current_user
 router = APIRouter()
 
 @router.get("/", response_model=list[VacancyPublic])
+@router.get("", response_model=list[VacancyPublic])
 def read_vacancies(
     db: Session = Depends(get_db),
     skip: int = 0,

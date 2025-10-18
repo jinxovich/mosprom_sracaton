@@ -7,7 +7,7 @@ import {
   Paper, 
   Avatar, 
   Chip,
-  Grid2 as Grid,
+  Grid,
   Card,
   CardContent,
   List,
@@ -43,15 +43,16 @@ const ProfilePage = () => {
         
         // Для HR - загружаем их вакансии
         if (user.role === 'hr') {
-          const res = await api.get('/vacancies/');
-          // Фильтруем только свои (в реальности нужен отдельный эндпоинт)
+          const res = await api.get('/vacancies/my');
           setMyItems(res.data);
         }
         
         // Для ВУЗов - загружаем их стажировки
         if (user.role === 'university') {
           const res = await api.get('/internships/');
-          setMyItems(res.data);
+          // Фильтруем только свои (в реальности нужен отдельный эндпоинт)
+          const myInternships = res.data.filter(item => item.owner_id === user.id);
+          setMyItems(myInternships);
         }
         
       } catch (err) {
@@ -105,7 +106,7 @@ const ProfilePage = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
             <Avatar 
               sx={{ 
@@ -152,12 +153,12 @@ const ProfilePage = () => {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
               <Typography variant="h5" gutterBottom>
                 {user.role === 'hr' && 'Мои вакансии'}
-                {user.role === 'university' && 'Мои стажировки и отклики'}
+                {user.role === 'university' && 'Мои стажировки'}
                 {user.role === 'admin' && 'Панель администратора'}
               </Typography>
               
@@ -181,7 +182,7 @@ const ProfilePage = () => {
                               secondary={
                                 <>
                                   <Typography variant="body2" color="text.secondary">
-                                    {item.description}
+                                    {item.description || item.responsibilities || 'Без описания'}
                                   </Typography>
                                   <Chip 
                                     label={item.is_published ? 'Опубликовано' : 'На модерации'}

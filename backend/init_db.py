@@ -1,6 +1,6 @@
 """
-Скрипт для пересоздания базы данных с новыми полями
-Запустите: python backend/migrate_db.py
+Скрипт для пересоздания базы данных с новыми полями.
+Запустите: python backend/init_db.py
 """
 
 import sys
@@ -13,12 +13,9 @@ from app.core.database import SessionLocal, engine, Base
 from app.core.security import get_password_hash
 from app.models import User, Vacancy, Internship
 
-print("=" * 60)
-print("МИГРАЦИЯ БАЗЫ ДАННЫХ")
-print("=" * 60)
 
-# Удаляем старую базу данных
-db_path = 'backend/test.db'
+# Определяем фактический файл базы данных из настроек SQLAlchemy engine
+db_path = os.path.abspath(engine.url.database or "test.db")
 if os.path.exists(db_path):
     response = input(f"\nБаза данных {db_path} будет удалена. Продолжить? (yes/no): ")
     if response.lower() != 'yes':
@@ -26,6 +23,12 @@ if os.path.exists(db_path):
         sys.exit(0)
     os.remove(db_path)
     print(f"✓ База данных {db_path} удалена")
+
+# Дополнительно: пытаемся дропнуть все таблицы (на случай, если файл не был удалён)
+try:
+    Base.metadata.drop_all(bind=engine)
+except Exception:
+    pass
 
 # Создаем все таблицы заново
 print("\nСоздание новых таблиц...")

@@ -12,6 +12,7 @@ import RegisterPage from './pages/RegisterPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import CreateVacancyPage from './pages/CreateVacancyPage';
 import CreateInternshipPage from './pages/CreateInternshipPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -24,6 +25,17 @@ function App() {
         <Route path="register" element={<RegisterPage />} />
 
         {/* --- Защищенные роуты --- */}
+        
+        {/* Профиль - доступен всем авторизованным */}
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        
         {/* Доступ только для HR */}
         <Route
           path="create-vacancy"
@@ -33,6 +45,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         {/* Доступ только для ВУЗов */}
         <Route
           path="create-internship"
@@ -42,6 +55,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         {/* Доступ только для Админов */}
         <Route
           path="admin-dashboard"
@@ -51,9 +65,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
-        {/* Можно добавить страницу профиля, доступную всем авторизованным */}
-        {/* <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} /> */}
       </Route>
     </Routes>
   );

@@ -8,6 +8,7 @@ from app.core.security import get_current_user
 router = APIRouter()
 
 @router.get("/", response_model=list[InternshipPublic])
+@router.get("", response_model=list[InternshipPublic])  # ← поддержка без завершающего слеша
 def read_internships(
     db: Session = Depends(get_db),
     skip: int = 0,
