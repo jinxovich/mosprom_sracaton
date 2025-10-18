@@ -12,9 +12,11 @@ app = FastAPI(title="MosProm ОЭЗ Backend")
 # --- CORS Middleware ---
 # Разрешаем запросы с фронтенда (React/Vue и т.д.)
 origins = [
-    "http://localhost:5174",  # Vite по умолчанию использует 5173, но у тебя 5174 — ок
+    "http://localhost:5173",  # ← добавь эту строку
+    "http://127.0.0.1:5173",  # ← и эту
+    "http://localhost:5174",
     "http://127.0.0.1:5174",
-    "http://localhost:3000",  # на случай, если запустишь через Create React App
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 

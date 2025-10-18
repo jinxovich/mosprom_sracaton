@@ -1,23 +1,34 @@
 import React from 'react';
 import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, Menu, MenuItem } from '@mui/material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const Layout = () => {
-  // ИСПРАВЛЕНО: Получаем `token` и `user` через реактивные хуки.
-  // Теперь, когда они изменятся после логина, компонент автоматически перерисуется.
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
-  // ИСПРАВЛЕНО: Вычисляем флаг аутентификации прямо здесь.
-  // Если токен есть - пользователь залогинен.
   const isAuthenticated = !!token;
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileClick = () => {
+    handleMenuClose();
+    navigate('/profile');
   };
 
   return (
@@ -28,17 +39,31 @@ const Layout = () => {
             Технополис.Карьера
           </Typography>
           
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button color="inherit" component={RouterLink} to="/">Главная</Button>
             
             {isAuthenticated ? (
               <>
-                {/* ЭТА ЛОГИКА ТЕПЕРЬ СРАБОТАЕТ ПРАВИЛЬНО */}
                 {user?.role === 'hr' && <Button color="inherit" component={RouterLink} to="/create-vacancy">Создать вакансию</Button>}
                 {user?.role === 'university' && <Button color="inherit" component={RouterLink} to="/create-internship">Создать стажировку</Button>}
                 {user?.role === 'admin' && <Button color="inherit" component={RouterLink} to="/admin-dashboard">Модерация</Button>}
                 
-                <Button color="inherit" onClick={handleLogout}>Выйти</Button>
+                <IconButton
+                  color="inherit"
+                  onClick={handleMenuOpen}
+                  sx={{ ml: 1 }}
+                >
+                  <AccountCircleIcon />
+                </IconButton>
+                
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem onClick={handleProfileClick}>Профиль</MenuItem>
+                  <MenuItem onClick={handleLogout}>Выйти</MenuItem>
+                </Menu>
               </>
             ) : (
               <>

@@ -1,9 +1,19 @@
+# app/schemas/vacancy.py
 from pydantic import BaseModel
 from typing import Optional
 
 class VacancyBase(BaseModel):
     title: str
-    description: str
+    company_name: Optional[str] = None
+    responsibilities: Optional[str] = None
+    requirements: Optional[str] = None
+    conditions: Optional[str] = None
+    salary_min: Optional[float] = None
+    salary_max: Optional[float] = None
+    salary_currency: str = "RUB"
+    work_location: Optional[str] = None
+    work_schedule: Optional[str] = None
+    additional_info: Optional[str] = None
 
 class VacancyCreate(VacancyBase):
     pass
