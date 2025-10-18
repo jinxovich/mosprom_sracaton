@@ -1,4 +1,3 @@
-# app/schemas/vacancy.py
 from pydantic import BaseModel
 from typing import Optional
 
@@ -28,6 +27,16 @@ class Vacancy(VacancyBase):
 
 class VacancyPublic(VacancyBase):
     id: int
+    # Добавим description для отображения на фронтенде
+    @property
+    def description(self) -> str:
+        """Генерируем описание из имеющихся полей"""
+        parts = []
+        if self.responsibilities:
+            parts.append(f"Обязанности: {self.responsibilities[:100]}...")
+        if self.requirements:
+            parts.append(f"Требования: {self.requirements[:100]}...")
+        return " ".join(parts) if parts else "Описание отсутствует"
 
     class Config:
         from_attributes = True
