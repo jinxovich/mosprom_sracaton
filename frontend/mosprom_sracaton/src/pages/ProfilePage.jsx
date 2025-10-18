@@ -409,7 +409,42 @@ const ProfilePage = () => {
             )}
 
             {user.role === 'admin' && (
-              <Alert severity="info">Для управления контентом перейдите в раздел "Модерация"</Alert>
+              <Card>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom>
+                    Аналитика платформы
+                  </Typography>
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* KPI Cards */}
+                  <Grid container spacing={2} sx={{ mb: 4 }}>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.light' }}>
+                        <Typography variant="body2" color="text.secondary">Всего вакансий</Typography>
+                        <Typography variant="h5" fontWeight="bold">3</Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'secondary.light' }}>
+                        <Typography variant="body2" color="text.secondary">Стажировок</Typography>
+                        <Typography variant="h5" fontWeight="bold">2</Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light' }}>
+                        <Typography variant="body2" color="text.secondary">Откликов</Typography>
+                        <Typography variant="h5" fontWeight="bold">0</Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light' }}>
+                        <Typography variant="body2" color="text.secondary">Пользователей</Typography>
+                        <Typography variant="h5" fontWeight="bold">5</Typography>
+                      </Paper>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
             )}
           </Stack>
         </Grid>
